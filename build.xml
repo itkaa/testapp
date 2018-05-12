@@ -1,5 +1,6 @@
 <project name="blank">
 
+    <property environment="env"/> 
     <property name="dist.path"  location="./dist"/>
 
     <!-- Project settings -->
@@ -215,6 +216,33 @@
         <ear destfile="${dist.path}/${project.dist.name}.ear" appxml="${basedir}/application.xml">
             <fileset dir="${dist.path}" includes="${project.dist.name}.war"/>
         </ear>
+    </target>
+
+    <target name="fodZip" depends="war" description="Build the fod uploadable zip">
+        <zip destfile="${dist.path}/${project.dist.name}.fod.zip">
+            <!-- copy the sources to the root src dir on the zip archive -->
+            <zipfileset dir="${src.java}" prefix="src">
+                <patternset id="java.sources">
+                    <include name ="**/*.java"/>
+                </patternset>
+            </zipfileset>
+            <!-- copy the war file to the root of the zip archive -->
+            <zipfileset dir="${dist.path}" prefix="">
+                <patternset id="dist.war">
+                    <include name ="*.war"/>
+                </patternset>
+            </zipfileset>
+        </zip>
+    </target>
+
+    <target name="scan" depends="fodZip" description="Set off an FOD Scan">
+	<echo>-jar /opt/fortify/FodUpload.jar -z ${dist.path}/${project.dist.name}.fod.zip -ac ${env.FOD_API_KEY} ${env.FOD_API_CRED} -bsi ${env.FOD_BSI_TOKEN} -ep 2 -a 2 -os</echo>
+	<java jar="/opt/fortify/FodUpload.jar"
+	      fork="true"
+	      failonerror="true"
+	      maxmemory="128m">
+	  <arg line="-z ${dist.path}/${project.dist.name}.fod.zip -ac ${env.FOD_API_KEY} ${env.FOD_API_CRED} -bsi ${env.FOD_BSI_TOKEN} -ep 2 -a 2 -os"/>
+	</java>
     </target>
 
     <!-- Build project and create distribution-->
